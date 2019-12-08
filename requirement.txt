@@ -1,0 +1,14 @@
+numpy 
+pandas
+sklearn
+tqdm
+gensim
+seaborn
+matplotlib
+plotly
+jupyter
+jupyterlab
+mojimoji
+autopep8
+pycodestyle
+pyyaml
