@@ -2,3 +2,7 @@
 *.zip
 *.jpg
 *.gz
+*.pt
+*.pyc
+**events.out**
+**ubyte**
