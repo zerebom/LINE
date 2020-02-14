@@ -1,2 +1,12 @@
-PATCH_SHAPE: [48, 48, 16, 1]
-BATCH_SIZE: 16
+# PATCH_SHAPE: [48, 48, 16, 1]
+BATCH_SIZE: 64
+M_EPOCH: 200
+Z_DIM: 20
+LEARNING_RATE: 0.02
+G_LR: 0.0001
+D_LR: 0.0004
+NET_G: Generator
+NET_D: Discriminator
+CRITERION: BCEWithLogitsLoss
+SAVE_DIR: /home/higuchi/ssd/Desktop/Sandbox/pytorch_GAN/lightning_logs
+NETWORK_NAME: DGGAN

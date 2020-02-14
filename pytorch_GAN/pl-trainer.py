@@ -2,6 +2,7 @@ import torchvision
 import pytorch_lightning as pl
 import torch
 from torch import nn
+import model
 from model import Generator, Discriminator
 from dataloder import make_datapath_list, ImageTransform, GAN_Img_Dataset
 from torch.utils.data import DataLoader
@@ -11,30 +12,30 @@ from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint
 from test_tube import Experiment
 from pytorch_lightning.loggers.tensorboard import TensorBoardLogger
-
-logger = TensorBoardLogger('/home/higuchi/ssd/Desktop/Sandbox/pytorch_GAN/lightning_logs', 'DGGAN')
+import yaml
 
 
 class GAN(pl.LightningModule):
     def __init__(self, hparams):
         super(GAN, self).__init__()
         self.hparams = hparams
-        # パラメータの保存
-        # self.scale_factor = opt.scale_factor
-        # self.batch_size = opt.batch_size
-        # self.patch_size = opt.patch_size
         self.last_imgs = None
 
-        self.z_dim = 20
-        self.batch_size = 64
-
+        self.z_dim = hparams.z_dim
+        self.batch_size = hparams.batch_size
+        self.d_lr = hparams.d_lr
+        self.g_lr = hparams.g_lr
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         # ネットワーク定義
-        self.net_G = Generator(z_dim=self.z_dim, image_size=64)
-        self.net_D = Discriminator(z_dim=self.z_dim, image_size=64)
+        net_g = getattr(model, self.hparams.net_g)
+        net_d = getattr(model, self.hparams.net_d)
+        criterion = getattr(nn, self.hparams.criterion)
 
-        self.criterion = nn.BCEWithLogitsLoss(reduction='mean')
+        self.net_G = net_g(z_dim=self.z_dim, image_size=64)
+        self.net_D = net_d(z_dim=self.z_dim, image_size=64)
+        self.criterion = criterion(reduction='mean')
+
         torch.backends.cudnn.benchmark = True
 
         # 誤差関数の定義
@@ -97,7 +98,7 @@ class GAN(pl.LightningModule):
 
     def configure_optimizers(self):
         # REQUIRED
-        g_lr, d_lr = 0.0001, 0.0004
+        g_lr, d_lr = self.d_lr, self.g_lr
         beta1, beta2 = 0.0, 0.9
         optimizer_G = torch.optim.Adam(self.net_G.parameters(), g_lr, [beta1, beta2])
         optimizer_D = torch.optim.Adam(self.net_D.parameters(), d_lr, [beta1, beta2])
@@ -105,17 +106,25 @@ class GAN(pl.LightningModule):
         return [optimizer_D, optimizer_G]
 
     @staticmethod
-    def add_model_specific_args(parent_parser):
+    def add_model_specific_args(parent_parser, yml):
         """
         Specify the hyperparams for this LightningModule
         """
         # MODEL specific
         parser = ArgumentParser(parents=[parent_parser])
-        parser.add_argument('--learning_rate', default=0.02, type=float)
-        parser.add_argument('--batch_size', default=16, type=int)
-
-        # training specific (for this model)
+        parser.add_argument('--learning_rate', default=yml['LEARNING_RATE'], type=float)
+        parser.add_argument('--g_lr', default=yml['G_LR'], type=float)
+        parser.add_argument('--d_lr', default=yml['D_LR'], type=float)
+        parser.add_argument('--batch_size', default=yml['BATCH_SIZE'], type=int)
+        parser.add_argument('--z_dim', default=yml['Z_DIM'], type=int)
         parser.add_argument('--max_nb_epochs', default=20, type=int)
+        parser.add_argument('--net_g', default=yml['NET_G'])
+        parser.add_argument('--net_d', default=yml['NET_D'])
+        parser.add_argument('--criterion', default=yml['CRITERION'])
+        parser.add_argument('--save_dir', default=yml['SAVE_DIR'])
+        parser.add_argument('--network_name', default=yml['NETWORK_NAME'])
+        parser.add_argument('--max_epochs', default=yml['M_EPOCH'])
+
 
         return parser
 
@@ -123,7 +132,10 @@ class GAN(pl.LightningModule):
 def main(hparams):
     # exp = Experiment(save_dir=f'./logs/')
     model = GAN(hparams)
-    trainer = Trainer(max_epochs=200,
+    logger = TensorBoardLogger(hparams.network_name, hparams.save_dir)
+    ckpt=ModelCheckpoint('/home/higuchi/ssd/Desktop/Sandbox/pytorch_GAN/lightning_logs/DGGAN')
+    trainer = Trainer(max_epochs=hparams.max_epochs,
+                      checkpoint_callback=ckpt,
                       logger=logger,
                       gpus=hparams.gpus,
                       nb_gpu_nodes=hparams.nodes)
@@ -134,8 +146,13 @@ if __name__ == "__main__":
     parser = ArgumentParser(add_help=False)
     parser.add_argument('--gpus', type=str, default=None)
     parser.add_argument('--nodes', type=int, default=1)
+    parser.add_argument('--yml_path', type=str, default='/home/higuchi/ssd/Desktop/Sandbox/pytorch_GAN/setting.yml')
+    hparams = parser.parse_args()
 
-    parser = GAN.add_model_specific_args(parser)
+    with open(hparams.yml_path) as file:
+        yml = yaml.load(file)
+
+    parser = GAN.add_model_specific_args(parser, yml)
     hparams = parser.parse_args()
 
     main(hparams)
