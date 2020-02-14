@@ -2,6 +2,7 @@ import time
 
 import torch.nn as nn
 import torch
+import matplotlib.pyplot as plt
 
 from model import Generator, Discriminator
 from dataloder import make_datapath_list, GAN_Img_Dataset, ImageTransform
