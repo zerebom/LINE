@@ -1,0 +1,16 @@
+numpy
+seaborn
+matplotlib
+opencv-python
+sklearn
+tqdm
+pyyaml
+ruamel.yaml
+plotly
+requests
+torch
+torchvision
+pytorch-lightning
+tqdm
+SimpleITK
+mlflow

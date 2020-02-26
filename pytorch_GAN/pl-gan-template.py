@@ -19,6 +19,10 @@ from torchvision.datasets import MNIST
 
 import pytorch_lightning as pl
 
+import pytorch_lightning.loggers.mlflow_logger
+
+# pytoch-lightningのtemplateコード(modelは適当)
+
 
 class Generator(nn.Module):
     def __init__(self, latent_dim, img_shape):
