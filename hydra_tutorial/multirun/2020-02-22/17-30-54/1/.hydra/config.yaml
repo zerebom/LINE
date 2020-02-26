@@ -1,0 +1,6 @@
+db:
+  driver: mysql
+  pass: hoge
+  user: kokoro
+website:
+  domain: example.com

@@ -1,0 +1,6 @@
+db:
+  driver: postgresql
+  pass: fuga
+  user: kokoro
+website:
+  domain: example.com

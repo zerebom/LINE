@@ -14,7 +14,7 @@ from pytorch_lightning.loggers.tensorboard import TensorBoardLogger
 
 logger = TensorBoardLogger('/home/higuchi/ssd/Desktop/Sandbox/pytorch_GAN/lightning_logs', 'DGGAN')
 
-
+# pytoch-bookのGANをlightningで実装したい
 class GAN(pl.LightningModule):
     def __init__(self, hparams):
         super(GAN, self).__init__()

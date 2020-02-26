@@ -1,0 +1,4 @@
+db:
+  driver: postgresql
+  pass: fuga
+  user: kokoro

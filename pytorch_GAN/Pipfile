@@ -1,0 +1,26 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+numpy = "*"
+seaborn = "*"
+matplotlib = "*"
+opencv-python = "*"
+sklearn = "*"
+tqdm = "*"
+plotly = "*"
+requests = "*"
+torch = "*"
+torchvision = "*"
+pytorch-lightning = "*"
+mlflow = "*"
+PyYAML = "*"
+"ruamel.yaml" = "*"
+SimpleITK = "*"
+
+[requires]
+python_version = "3.6"
