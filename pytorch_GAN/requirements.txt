@@ -14,3 +14,4 @@ pytorch-lightning
 tqdm
 SimpleITK
 mlflow
+Pillow==6.1
