@@ -1,0 +1,15 @@
+artifact_uri: ./mlruns/hoge/1/c9a8149baeec4566bc87d8e176e03f91/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '1'
+lifecycle_stage: active
+name: ''
+run_id: c9a8149baeec4566bc87d8e176e03f91
+run_uuid: c9a8149baeec4566bc87d8e176e03f91
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1582722607462
+status: 1
+tags: []
+user_id: unknown
