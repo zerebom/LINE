@@ -1,0 +1,6 @@
+lr: 0.001
+batch_size: 16
+gpus: 2
+epoch: 5
+input_shape: [1,16,48,48]
+label_shape: [3,16,16,16]

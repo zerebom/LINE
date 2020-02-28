@@ -6,6 +6,7 @@ verify_ssl = true
 [dev-packages]
 pycodestyle = "*"
 flake8 = "*"
+ipykernel = "*"
 
 [packages]
 numpy = "*"
@@ -24,6 +25,9 @@ PyYAML = "*"
 "ruamel.yaml" = "*"
 SimpleITK = "*"
 pillow = "==6.1"
+jupytext = "*"
+tensorflow = "*"
+jupyter = "*"
 hydra-core = "*"
 
 [requires]

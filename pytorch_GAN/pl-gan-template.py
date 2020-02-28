@@ -191,12 +191,12 @@ class GAN(pl.LightningModule):
         path = './arifact.png'
 
         # with self.logger.experiment.start_run():
-        run_id = self.logger.experiment.run_id()
+        # run_id = self.logger.experiment.run_id()
         # TODO: mlflow->tensorboard
 
-        self.run_id = self.client.create_run(self.experiment_id).info.run_id
+        # self.run_id = self.client.create_run(self.experiment_id).info.run_id
         grid.save(path)
-        self.logger.experiment.log_artifact(run_id, path)
+        # self.logger.experiment.log_artifact(run_id, path)
 
         # self.logger.experiment.add_image(f'generated_images', grid, self.current_epoch)
 
