@@ -87,7 +87,7 @@ class KitsTrainer(pl.LightningModule):
     def val_dataloader(self):
         return DataLoader(self.val_DS, batch_size=self.hparams.batch_size)
 
-
+#
 @hydra.main(config_path='config.yaml')
 def main(cfg: DictConfig):
     p = argparse.ArgumentParser()
