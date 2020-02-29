@@ -1,0 +1,15 @@
+artifact_uri: file:///home/higuchi/ssd/Desktop/Sandbox/pytorch_GAN/mlruns/1/a757cf19355d45d582b245efc9ecf845/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '1'
+lifecycle_stage: active
+name: ''
+run_id: a757cf19355d45d582b245efc9ecf845
+run_uuid: a757cf19355d45d582b245efc9ecf845
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1582721213372
+status: 1
+tags: []
+user_id: unknown

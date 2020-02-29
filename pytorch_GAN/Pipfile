@@ -4,6 +4,8 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+pycodestyle = "*"
+flake8 = "*"
 
 [packages]
 numpy = "*"
@@ -21,6 +23,8 @@ mlflow = "*"
 PyYAML = "*"
 "ruamel.yaml" = "*"
 SimpleITK = "*"
+pillow = "==6.1"
+hydra-core = "*"
 
 [requires]
 python_version = "3.6"
