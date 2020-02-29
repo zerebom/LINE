@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "cf70baabf82ebc2b8253459005d30e7d69d4603bb0f6c7e9d0bbc03719df7333"
+            "sha256": "67110d29323c851df41359d71d2631c8b9850614ecdfe38d68c84939650e7d49"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -290,6 +290,14 @@
                 "sha256:ff7d241f866b718e4584fa95f520cb19405220c501bd3a53ee11871ba5166ea2"
             ],
             "version": "==2.10.0"
+        },
+        "hydra-core": {
+            "hashes": [
+                "sha256:173d2688b65ba1345f4f43b6bc5a3d92485b3cebfccca2ca33d5f8a37ec6fdc6",
+                "sha256:43ef27b4a32a70cbf566b10bd198def5c5d03cab212d4ea49e744aeb0c14a6b7"
+            ],
+            "index": "pypi",
+            "version": "==0.11.3"
         },
         "idna": {
             "hashes": [
@@ -603,6 +611,13 @@
                 "sha256:df884cd6cbe20e32633f1db1072e9356f53638e4361bef4e8b03c9127c9328ea"
             ],
             "version": "==3.1.0"
+        },
+        "omegaconf": {
+            "hashes": [
+                "sha256:01c9f93c3578dce7d42ce06f3d1305437322234ccc1accfc71d344d5e17413a1",
+                "sha256:5bb6c9391224c6277e06171b661904a68dcbcfbabd831eb552f4803a02eefddc"
+            ],
+            "version": "==1.4.1"
         },
         "opencv-python": {
             "hashes": [

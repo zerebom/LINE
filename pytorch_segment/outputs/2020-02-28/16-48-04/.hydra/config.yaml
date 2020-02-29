@@ -1,0 +1,17 @@
+model:
+  batch_size: 16
+  epoch: 5
+  gpus: 2
+  lr: 0.001
+patch:
+  data_dir: /home/higuchi/ssd/kits19/data
+  train_ids:
+  - '001'
+  train_patch: tumor_48x48x16
+  val_ids:
+  - '002'
+  val_patch: tumor_48x48x16
+trainer:
+  epoch: 5
+  gpus: 2
+  row_log_interval: 10

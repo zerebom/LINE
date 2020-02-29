@@ -23,37 +23,21 @@ from import_loss import BCEDiceLoss
 
 import hydra
 from omegaconf import DictConfig
-
-logger = TensorBoardLogger(save_dir='./tb_logger', name='tutorial')
-
-DATA_DIR = '/home/higuchi/ssd/kits19/data'
-train_patch = 'tumor_48x48x16'
-val_patch = 'tumor_60x60x20'
-train_ids = ['001']
-val_ids = ['002']
-
-train_path_df = DataPathMaker(DATA_DIR, patch_dir_name=train_patch).create_dataframe(train_ids)
-val_path_df = DataPathMaker(DATA_DIR, patch_dir_name=val_patch).create_dataframe(val_ids)
-
-train_im_list = train_path_df[train_path_df['type'] == 'image']['path'].astype(str).values
-val_im_list = train_path_df[train_path_df['type'] == 'image']['path'].astype(str).values
-
-train_lb_list = train_path_df[train_path_df['type'] == 'label']['path'].astype(str).values
-val_lb_list = train_path_df[train_path_df['type'] == 'label']['path'].astype(str).values
+import argparse
 
 
 class KitsTrainer(pl.LightningModule):
 
-    def __init__(self, hparams):
+    def __init__(self, hparams, tr_im, tr_lb, val_im, val_lb):
         super(KitsTrainer, self).__init__()
+        # hparam経由では、listで渡すことは出来ない。
         self.hparams = hparams
         # TODO: yaml
-        self.tr_DS = KitsDataSet(train_im_list[:100], train_lb_list[:100], phase='train', transform=None)
-        self.val_DS = KitsDataSet(val_im_list[:100], val_lb_list[:100], phase='val', transform=None)
+        self.tr_DS = KitsDataSet(tr_im[:100], tr_lb[:100], phase='train', transform=None)
+        self.val_DS = KitsDataSet(val_im[:100], val_lb[:100], phase='val', transform=None)
         self.devise = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.criterion = BCEDiceLoss(0.5, 0.5)
-        self.batch_size = 16
-
+        self.batch_size = hparams.batch_size
         self.net = UNet3D([self.batch_size, 1, 16, 48, 48], 3).cuda()
 
     def forward(self, im):
@@ -93,29 +77,53 @@ class KitsTrainer(pl.LightningModule):
 
     def configure_optimizers(self):
         # opt = torch.optim.Adam(self.parameters(), lr=0.001)
-        return [torch.optim.Adam(self.net.parameters(), lr=0.001)]
+        return [torch.optim.Adam(self.net.parameters(), lr=self.hparams.lr)]
 
     @pl.data_loader
     def train_dataloader(self):
-        return DataLoader(self.tr_DS, batch_size=self.batch_size)
+        return DataLoader(self.tr_DS, batch_size=self.hparams.batch_size)
 
     @pl.data_loader
     def val_dataloader(self):
-        return DataLoader(self.val_DS, batch_size=self.batch_size)
+        return DataLoader(self.val_DS, batch_size=self.hparams.batch_size)
+
 
 @hydra.main(config_path='config.yaml')
 def main(cfg: DictConfig):
-    model = KitsTrainer(hparams)
+    p = argparse.ArgumentParser()
+
+    # hparm はargsからしか保存できないので移し替える。
+    args = p.parse_args()
+    for key, value in cfg.model.items():
+        args.__setattr__(key, value)
+
+    tblogger = TensorBoardLogger(save_dir=cfg.save.save_dir, name=cfg.save.name)
+    pacfg = cfg.patch
+    trcfg = cfg.trainer
+
+    train_path_df = DataPathMaker(pacfg.data_dir, patch_dir_name=pacfg.train_patch).\
+        create_dataframe(pacfg.train_ids)
+    val_path_df = DataPathMaker(pacfg.data_dir, patch_dir_name=pacfg.val_patch).\
+        create_dataframe(pacfg.val_ids)
+
+    tr_im_list = train_path_df[train_path_df['type'] == 'image']['path'].astype(str).values
+    val_im_list = val_path_df[val_path_df['type'] == 'image']['path'].astype(str).values
+
+    tr_lb_list = train_path_df[train_path_df['type'] == 'label']['path'].astype(str).values
+    val_lb_list = val_path_df[val_path_df['type'] == 'label']['path'].astype(str).values
+
+    model = KitsTrainer(args, tr_im_list, tr_lb_list, val_im_list, val_lb_list)
+
+    trainer = pl.Trainer(
+        gpus=trcfg.gpus,
+        row_log_interval=trcfg.row_log_interval,
+        logger=tblogger,
+        max_epochs=trcfg.epoch,
+        early_stop_callback=None)
+    trainer.fit(model)
 
 
 if __name__ == "__main__":
 
-    model = KitsTrainer()
+    main()
     # max_nb is deprecated
-    trainer = pl.Trainer(
-        gpus=2,
-        row_log_interval=10,
-        logger=logger,
-        max_epochs=5,
-        early_stop_callback=None)
-    trainer.fit(model)
