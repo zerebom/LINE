@@ -10,8 +10,7 @@ from argparse import ArgumentParser
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint
 from test_tube import Experiment
-from pytorch_lightning.loggers.tensorboard # pytoch-bookのGANをlightning    #result_pow = tf.pow(result,1.0/3.0)
-import TensorBoardLogger
+from pytorch_lightning.loggers.tensorboard import TensorBoardLogger
 
 logger = TensorBoardLogger('/home/higuchi/ssd/Desktop/Sandbox/pytorch_GAN/lightning_logs', 'DGGAN')
 
