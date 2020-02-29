@@ -5,7 +5,7 @@ patch:
  train_ids: ['001']
  val_ids: ['002']
 # import hparam
-save:
+exp:
  save_dir: ./tb_logger2
  name: tutorial2
 model:

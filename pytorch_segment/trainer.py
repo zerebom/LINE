@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from argparse import ArgumentParser
 from collections import OrderedDict
 
@@ -9,10 +10,8 @@ import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
-from torchvision.datasets import MNIST
-
 import pytorch_lightning as pl
-
+from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.logging import MLFlowLogger, TensorBoardLogger
 from PIL import Image
 from torchvision import transforms
@@ -24,6 +23,7 @@ from import_loss import BCEDiceLoss
 import hydra
 from omegaconf import DictConfig
 import argparse
+import cloudpickle
 
 
 class KitsTrainer(pl.LightningModule):
@@ -66,13 +66,21 @@ class KitsTrainer(pl.LightningModule):
         img, mask = img.cuda().float(), mask.cuda().float()
         out = self.forward(img)
         loss_val = self.criterion(out, mask)
-
         return {'val_loss': loss_val}
 
     # outputsはvalidation_stepのreturnのこと.モデルの出力ではない
     def validation_end(self, outputs):
         avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
         tensorboard_logs = {'val_loss': avg_loss}
+
+        # 相対pathは/outputs/yyyy-mm-dd/hh-mm-ss/ の下からスタート
+        weight_path = Path(f'./outputs/model_{self.current_epoch}.pkl')
+        weight_path.parent.mkdir(parents=True, exist_ok=True)
+        Path(weight_path).touch()
+
+        with open(weight_path, 'wb') as f:
+            cloudpickle.dump(self.net.state_dict(), f)
+
         return {'avg_val_loss': avg_loss, 'log': tensorboard_logs}
 
     def configure_optimizers(self):
@@ -96,8 +104,8 @@ def main(cfg: DictConfig):
     args = p.parse_args()
     for key, value in cfg.model.items():
         args.__setattr__(key, value)
-
-    tblogger = TensorBoardLogger(save_dir=cfg.save.save_dir, name=cfg.save.name)
+    print('cfg.save:', cfg.exp)
+    tblogger = TensorBoardLogger(save_dir=cfg.exp.save_dir, name=cfg.exp.name)
     pacfg = cfg.patch
     trcfg = cfg.trainer
 
@@ -114,9 +122,14 @@ def main(cfg: DictConfig):
 
     model = KitsTrainer(args, tr_im_list, tr_lb_list, val_im_list, val_lb_list)
 
+    # Called when the validation loop ends
+    # checkpoint_callback = ModelCheckpoint(filepath ='ckpt', save_weights_only=True)
+
     trainer = pl.Trainer(
+        # checkpoint_callback=checkpoint_callback,
         gpus=trcfg.gpus,
         row_log_interval=trcfg.row_log_interval,
+        checkpoint_callback=False,
         logger=tblogger,
         max_epochs=trcfg.epoch,
         early_stop_callback=None)

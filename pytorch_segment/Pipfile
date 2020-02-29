@@ -29,6 +29,7 @@ jupytext = "*"
 tensorflow = "*"
 jupyter = "*"
 hydra-core = "*"
+cloudpickle = "*"
 
 [requires]
 python_version = "3.6"
