@@ -27,7 +27,6 @@ import cloudpickle
 
 
 class KitsTrainer(pl.LightningModule):
-
     def __init__(self, hparams, tr_im, tr_lb, val_im, val_lb):
         super(KitsTrainer, self).__init__()
         # hparam経由では、listで渡すことは出来ない。
@@ -35,7 +34,6 @@ class KitsTrainer(pl.LightningModule):
         # TODO: yaml
         self.tr_DS = KitsDataSet(tr_im[:100], tr_lb[:100], phase='train', transform=None)
         self.val_DS = KitsDataSet(val_im[:100], val_lb[:100], phase='val', transform=None)
-        self.devise = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.criterion = BCEDiceLoss(0.5, 0.5)
         self.batch_size = hparams.batch_size
         self.net = UNet3D([self.batch_size, 1, 16, 48, 48], 3).cuda()
@@ -47,8 +45,6 @@ class KitsTrainer(pl.LightningModule):
         img, mask = batch
         img, mask = img.cuda().float(), mask.cuda().float()
         out = self.forward(img)
-        # print('out,mask:', out.size(), mask.size())
-
         loss_val = self.criterion(out, mask)
 
         if self.global_step % self.trainer.row_log_interval == 0:
@@ -60,9 +56,6 @@ class KitsTrainer(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         img, mask = batch
-        if self.on_gpu:
-            img = img.cuda(img.device.index)
-        # img, mask = img.float(), mask.float()
         img, mask = img.cuda().float(), mask.cuda().float()
         out = self.forward(img)
         loss_val = self.criterion(out, mask)
@@ -72,19 +65,10 @@ class KitsTrainer(pl.LightningModule):
     def validation_end(self, outputs):
         avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
         tensorboard_logs = {'val_loss': avg_loss}
-
-        # 相対pathは/outputs/yyyy-mm-dd/hh-mm-ss/ の下からスタート
-        weight_path = Path(f'./outputs/model_{self.current_epoch}.pkl')
-        weight_path.parent.mkdir(parents=True, exist_ok=True)
-        Path(weight_path).touch()
-
-        with open(weight_path, 'wb') as f:
-            cloudpickle.dump(self.net.state_dict(), f)
-
+        self._custom_save_ckpt()
         return {'avg_val_loss': avg_loss, 'log': tensorboard_logs}
 
     def configure_optimizers(self):
-        # opt = torch.optim.Adam(self.parameters(), lr=0.001)
         return [torch.optim.Adam(self.net.parameters(), lr=self.hparams.lr)]
 
     @pl.data_loader
@@ -95,20 +79,33 @@ class KitsTrainer(pl.LightningModule):
     def val_dataloader(self):
         return DataLoader(self.val_DS, batch_size=self.hparams.batch_size)
 
+    def _custom_save_ckpt(self, path=None):
+        '''デフォルトだとモデル全体を保存してしまい、容量が大きくなってしまうため、cloudpickleで保存する.
+        '''
+        if path is None:
+            path = f'./outputs/model_{self.current_epoch}.pkl'
+
+        # 相対pathは/outputs/yyyy-mm-dd/hh-mm-ss/ の下からスタート
+        weight_path = Path(path)
+        weight_path.parent.mkdir(parents=True, exist_ok=True)
+        Path(weight_path).touch()
+
+        with open(weight_path, 'wb') as f:
+            cloudpickle.dump(self.net.state_dict(), f)
 #
 @hydra.main(config_path='config.yaml')
 def main(cfg: DictConfig):
     p = argparse.ArgumentParser()
-
     # hparm はargsからしか保存できないので移し替える。
     args = p.parse_args()
     for key, value in cfg.model.items():
         args.__setattr__(key, value)
-    print('cfg.save:', cfg.exp)
+
     tblogger = TensorBoardLogger(save_dir=cfg.exp.save_dir, name=cfg.exp.name)
     pacfg = cfg.patch
     trcfg = cfg.trainer
 
+    # TODO: path周りきれいにする
     train_path_df = DataPathMaker(pacfg.data_dir, patch_dir_name=pacfg.train_patch).\
         create_dataframe(pacfg.train_ids)
     val_path_df = DataPathMaker(pacfg.data_dir, patch_dir_name=pacfg.val_patch).\
