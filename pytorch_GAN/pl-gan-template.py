@@ -19,13 +19,9 @@ from torchvision.datasets import MNIST
 
 import pytorch_lightning as pl
 
-from pytorch_lightning.logging import MLFlowLogger, TensorBoardLogger
-from PIL import Image
-from torchvision import transforms
+import pytorch_lightning.loggers.mlflow_logger
 
 # pytoch-lightningのtemplateコード(modelは適当)
-
-logger = MLFlowLogger('exp_gan', './mlruns')
 
 
 class Generator(nn.Module):
@@ -187,18 +183,7 @@ class GAN(pl.LightningModule):
         # log sampled images
         sample_imgs = self.forward(z)
         grid = torchvision.utils.make_grid(sample_imgs)
-        grid = transforms.ToPILImage()(grid.cpu()).convert('L')
-        path = './arifact.png'
-
-        # with self.logger.experiment.start_run():
-        # run_id = self.logger.experiment.run_id()
-        # TODO: mlflow->tensorboard
-
-        # self.run_id = self.client.create_run(self.experiment_id).info.run_id
-        grid.save(path)
-        # self.logger.experiment.log_artifact(run_id, path)
-
-        # self.logger.experiment.add_image(f'generated_images', grid, self.current_epoch)
+        self.logger.experiment.add_image(f'generated_images', grid, self.current_epoch)
 
 
 def main(hparams):
@@ -210,7 +195,7 @@ def main(hparams):
     # ------------------------
     # 2 INIT TRAINER
     # ------------------------
-    trainer = pl.Trainer(logger=logger, gpus=[0])
+    trainer = pl.Trainer()
 
     # ------------------------
     # 3 START TRAINING
