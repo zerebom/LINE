@@ -7,3 +7,5 @@
 **events.out**
 **ubyte**
 /mlflow
+**.ckpt
+**/./hydra
